@@ -6,6 +6,7 @@ from torch_geometric.transforms import ToDense
 from functools import partial
 from multiprocessing import Pool
 from scipy.sparse.csgraph import floyd_warshall
+from utils import gen_dist_mask_pq_walk
 
 splits = ['train', 'val', 'test']
 metadata = {
@@ -17,6 +18,7 @@ metadata = {
 }
 
 func_sp = partial(floyd_warshall, directed=False, unweighted=True)
+func_sp_ours = partial(gen_dist_mask_pq_walk, p=1, q=1, walk_length=10, num_walks=5)
 
 def process(name):
     for split in splits:
@@ -29,11 +31,15 @@ def process(name):
                 dataset_as_dict[key].append(g[key].numpy())
         
         adjs = dataset_as_dict.pop('adj')
-        with Pool(25) as p: #! adjust according to your machine
-            dist = p.map(func_sp, adjs)
-        dist = np.stack(dist)
-        dist = np.where(np.isfinite(dist), dist, -1).astype(np.int32)
-        dist_mask = np.stack([(dist == k) for k in range(dist.max() + 1)], axis=1)
+        # with Pool(25) as p: #! adjust according to your machine
+        #     dist = p.map(func_sp, adjs)
+        # dist = np.stack(dist)
+        # dist = np.where(np.isfinite(dist), dist, -1).astype(np.int32)
+        # dist_mask = np.stack([(dist == k) for k in range(dist.max() + 1)], axis=1)
+        
+        with Pool(25) as p:
+            dist_masks = p.map(func_sp_ours, adjs)
+        dist_mask = np.stack(dist_masks)
         
         if name in ['MNIST', 'CIFAR10']:
             np.savez(f'./data/{name}/{split}.npz',
@@ -63,11 +69,15 @@ def process_zinc():
                 dataset_as_dict[key].append(g[key].numpy())
         
         adjs = dataset_as_dict.pop('adj')
+        # with Pool(25) as p:
+        #     dist = p.map(func_sp, adjs)
+        # dist = np.stack(dist)
+        # dist = np.where(np.isfinite(dist), dist, -1).astype(np.int32)
+        # dist_mask = np.stack([(dist == k) for k in range(dist.max() + 1)], axis=1)
+        
         with Pool(25) as p:
-            dist = p.map(func_sp, adjs)
-        dist = np.stack(dist)
-        dist = np.where(np.isfinite(dist), dist, -1).astype(np.int32)
-        dist_mask = np.stack([(dist == k) for k in range(dist.max() + 1)], axis=1)
+            dist_masks = p.map(func_sp_ours, adjs)
+        dist_mask = np.stack(dist_masks)
 
         np.savez(f'./data/ZINC/subset/{split}.npz',
                  x = np.stack(dataset_as_dict['x']).squeeze().astype(np.int32),
