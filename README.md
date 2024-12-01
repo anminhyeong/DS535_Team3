@@ -26,10 +26,7 @@ To prepare MNIST, CIFAR10, ZINC, PATTERN, and CLUSTER, please run:
 ```
 python preprocess.py
 ```
-To prepare Peptides-func and Peptides-struct, please run:
-```
-python preprocess_peptides.py
-```
+
 
 ## Training
 
@@ -49,20 +46,6 @@ python train_sbm.py --name CLUSTER --num_layers 16 --dim_h 64 --dim_v 64 --weigh
 python train_sbm.py --name PATTERN --num_layers 10 --dim_h 72 --dim_v 64 --weight_decay 0.1 --r_min 0.5
 ```
 
-For Peptides-func and Peptides-struct:
-```
-python train_peptides_func.py
-python train_peptides_struct.py
-```
 ---
 
-If you have any questions regarding the code, please feel free to raise an issue.
-If you find our paper helpful in your research, please consider citing it:
-```
-@inproceedings{ding2024gred,
-title={Recurrent Distance Filtering for Graph Representation Learning},
-author={Yuhui Ding and Antonio Orvieto and Bobby He and Thomas Hofmann},
-booktitle={Forty-first International Conference on Machine Learning},
-year={2024}
-}
-```
+(Should add lisense here)
