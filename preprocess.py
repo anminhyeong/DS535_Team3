@@ -91,10 +91,10 @@ def process_zinc():
 
 
 parser = argparse.ArgumentParser(description="Setting the lenght and number of the random walks")
-parser.add_argument('--length', type=int, action='store_const', help="the length of the random walks", default=5)
-parser.add_argument('--num', type=int, action='store_const', help="the length of the random walks", default=5)
-parser.add_argument('--p_value', type=float, action='store_const', help="the length of the random walks", default=1.0)
-parser.add_argument('--q_value', type=float, action='store_const', help="the length of the random walks", default=1.0)
+parser.add_argument('--length', type=int, help="the length of the random walks", default=5)
+parser.add_argument('--num', type=int, help="the length of the random walks", default=5)
+parser.add_argument('--p_value', type=float, help="the length of the random walks", default=1.0)
+parser.add_argument('--q_value', type=float, help="the length of the random walks", default=1.0)
 args = parser.parse_args()
 
 if __name__ == '__main__':
