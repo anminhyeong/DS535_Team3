@@ -1,5 +1,5 @@
 import numpy as np
-import tqdm
+from tqdm import tqdm
 from sklearn.metrics import average_precision_score
 
 
@@ -43,18 +43,18 @@ def eval_ap(y_true, y_pred):
 
     return sum(ap_list) / len(ap_list)
 
-def pq_walk_sequences(adj, p=1, q=1, walk_length=10, num_walks=5):
+def pq_walk_sequences(adj, p=1, q=1, walk_length=5, num_walks=5):
     """
     Node2Vec의 p-q walk를 기반으로 walk sequences를 생성.
     """
     num_nodes = adj.shape[0]
     walk_sequences = []
 
-    for start_node in tqdm(range(num_nodes)):
-        for _ in tqdm(range(num_walks)):
+    for start_node in range(num_nodes):
+        for _ in range(num_walks):
             current_node = start_node
             prev_node = -1
-            walk = np.array([current_node])  # 시작 노드를 포함한 walk
+            walk = [current_node]  # 시작 노드를 포함한 walk
             for _ in range(walk_length - 1):
                 neighbors = np.where(adj[current_node] > 0)[0]
                 if len(neighbors) == 0:
@@ -87,7 +87,7 @@ def pq_walk_sequences(adj, p=1, q=1, walk_length=10, num_walks=5):
  
     return walk_sequences
 
-def gen_dist_mask_pq_walk(adj, p=1, q=1, walk_length=10, num_walks=5):
+def gen_dist_mask_pq_walk(adj, p=1, q=1, walk_length=5, num_walks=5):
     """
     p-q walk 기반 거리 마스크 생성.
     """
@@ -101,4 +101,4 @@ def gen_dist_mask_pq_walk(adj, p=1, q=1, walk_length=10, num_walks=5):
             next_node = walk[step + 1]
             dist_mask[walk[0], step + 1, next_node] +=1  # 해당 스텝에서 이동한 노드 쌍을 기록
 
-    return walk_sequences, dist_mask
+    return dist_mask

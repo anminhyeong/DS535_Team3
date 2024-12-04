@@ -6,7 +6,9 @@ from torch_geometric.transforms import ToDense
 from functools import partial
 from multiprocessing import Pool
 from scipy.sparse.csgraph import floyd_warshall
-from utils import gen_dist_mask_pq_walk
+from tqdm import tqdm
+import argparse
+from utils import gen_dist_mask_pq_walk, pq_walk_sequences
 
 splits = ['train', 'val', 'test']
 metadata = {
@@ -19,7 +21,6 @@ metadata = {
 
 func_sp = partial(floyd_warshall, directed=False, unweighted=True)
 func_sp_ours = partial(gen_dist_mask_pq_walk, p=1, q=1, walk_length=10, num_walks=5)
-keys = None
 
 def process(name):
     for split in splits:
@@ -37,8 +38,9 @@ def process(name):
         # dist = np.where(np.isfinite(dist), dist, -1).astype(np.int32)
         # dist_mask = np.stack([(dist == k) for k in range(dist.max() + 1)], axis=1)
         
-        with Pool(25) as p:
-            dist_masks = p.map(func_sp_ours, adjs)
+        dist_masks = []
+        for adj in tqdm(adjs):
+            dist_masks.append(func_sp_ours(adj))
         dist_mask = np.stack(dist_masks)
         
         if name in ['MNIST', 'CIFAR10']:
@@ -75,8 +77,9 @@ def process_zinc():
         # dist = np.where(np.isfinite(dist), dist, -1).astype(np.int32)
         # dist_mask = np.stack([(dist == k) for k in range(dist.max() + 1)], axis=1)
         
-        with Pool(25) as p:
-            dist_masks = p.map(func_sp_ours, adjs)
+        dist_masks = []
+        for adj in tqdm(adjs):
+            dist_masks.append(func_sp_ours(adj))
         dist_mask = np.stack(dist_masks)
 
         np.savez(f'./data/ZINC/subset/{split}.npz',
@@ -87,11 +90,28 @@ def process_zinc():
         np.save(f'./data/ZINC/subset/{split}_edge_attr', np.stack(adjs).astype(np.int32))
 
 
+parser = argparse.ArgumentParser(description="Setting the lenght and number of the random walks")
+parser.add_argument('--length', type=int, action='store_const', help="the length of the random walks", default=10)
+parser.add_argument('--num', type=int, action='store_const', help="the length of the random walks", default=5)
+parser.add_argument('--p_value', type=float, action='store_const', help="the length of the random walks", default=1.0)
+parser.add_argument('--q_value', type=float, action='store_const', help="the length of the random walks", default=1.0)
+args = parser.parse_args()
+
 if __name__ == '__main__':
+
+    walk_length = args.length
+    num_walks = args.num
+    p = args.p_value
+    q = args.q_value
+    func_sp_ours = partial(gen_dist_mask_pq_walk, p=p, q=q, walk_length=walk_length, num_walks=num_walks)
+
     if not os.path.exists('./data'):
         os.mkdir('./data')
     for name in ['MNIST', 'CIFAR10', 'PATTERN', 'CLUSTER']:
         print(f'Processing {name}...')
         process(name)
+        if os.path.exists('./data/'+ name + '/processed'):
+            src_name = './data/'+ name + '/processed'
+            os.rename(src_name, src_name + str(walk_length) + '-' + str(num_walks) + '-' + str(int(p * 100)) + '-' + str(int(q * 100)))
     print(f'Processing ZINC...')    
     process_zinc()
