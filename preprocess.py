@@ -93,30 +93,33 @@ def process_zinc():
 parser = argparse.ArgumentParser(description="Setting the lenght and number of the random walks")
 parser.add_argument('--length', type=int, help="the length of the random walks", default=5)
 parser.add_argument('--num', type=int, help="the length of the random walks", default=5)
-parser.add_argument('--p_value', type=float, help="the length of the random walks", default=1.0)
-parser.add_argument('--q_value', type=float, help="the length of the random walks", default=1.0)
+parser.add_argument('--p_value', type=float, help="the p_value of the random walk", default=1.0)
+parser.add_argument('--q_value', type=float, help="the q_value of the random walk", default=1.0)
+parser.add_argument('--name', type=str, help="the name of the dataset", default="MNIST")
 args = parser.parse_args()
 
 if __name__ == '__main__':
 
     walk_length = args.length
     num_walks = args.num
+    name = args.name
     p = args.p_value
     q = args.q_value
     func_sp_ours = partial(gen_dist_mask_pq_walk, p=p, q=q, walk_length=walk_length, num_walks=num_walks)
 
     if not os.path.exists('./data'):
         os.mkdir('./data')
-    for name in ['MNIST', 'CIFAR10', 'PATTERN', 'CLUSTER']:
+    if name in ['MNIST', 'CIFAR10', 'PATTERN', 'CLUSTER']:
         print(f'Processing {name}...')
         process(name)
         if os.path.exists('./data/'+ name + '/processed'):
             for split in splits:
                 src_name = './data/'+ name + '/' + split +'_dist_mask.npy'
                 os.rename(src_name, src_name + str(walk_length) + '-' + str(num_walks) + '-' + str(int(p * 100)) + '-' + str(int(q * 100)))
-    print(f'Processing ZINC...')    
-    process_zinc()
-    if os.path.exists('./data/ZINC/subset'):
-        for split in splits:
-            src_name = './data/ZINC/' + split + '_dist_mask.npy'
-            os.rename(src_name, src_name + str(walk_length) + '-' + str(num_walks) + '-' + str(int(p * 100)) + '-' + str(int(q * 100)))
+    elif name in ["ZINC"]:
+        print(f'Processing ZINC...')
+        process_zinc()
+        if os.path.exists('./data/ZINC/subset'):
+            for split in splits:
+                src_name = './data/ZINC/' + split + '_dist_mask.npy'
+                os.rename(src_name, src_name + str(walk_length) + '-' + str(num_walks) + '-' + str(int(p * 100)) + '-' + str(int(q * 100)))
