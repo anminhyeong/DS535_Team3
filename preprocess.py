@@ -20,7 +20,7 @@ metadata = {
 }
 
 func_sp = partial(floyd_warshall, directed=False, unweighted=True)
-func_sp_ours = partial(gen_dist_mask_pq_walk, p=1, q=1, walk_length=10, num_walks=5)
+func_sp_ours = partial(gen_dist_mask_pq_walk, p=1, q=1, walk_length=5, num_walks=5)
 
 def process(name):
     for split in splits:
@@ -91,7 +91,7 @@ def process_zinc():
 
 
 parser = argparse.ArgumentParser(description="Setting the lenght and number of the random walks")
-parser.add_argument('--length', type=int, action='store_const', help="the length of the random walks", default=10)
+parser.add_argument('--length', type=int, action='store_const', help="the length of the random walks", default=5)
 parser.add_argument('--num', type=int, action='store_const', help="the length of the random walks", default=5)
 parser.add_argument('--p_value', type=float, action='store_const', help="the length of the random walks", default=1.0)
 parser.add_argument('--q_value', type=float, action='store_const', help="the length of the random walks", default=1.0)
