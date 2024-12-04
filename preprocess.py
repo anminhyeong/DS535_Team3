@@ -39,8 +39,7 @@ def process(name):
         
         with Pool(25) as p:
             dist_masks = p.map(func_sp_ours, adjs)
-        dist_mask = np.stack(dist_masks, axis=1)
-        print(dist_mask.shape, len(dataset))
+        dist_mask = np.stack(dist_masks)
         
         if name in ['MNIST', 'CIFAR10']:
             np.savez(f'./data/{name}/{split}.npz',
@@ -78,7 +77,7 @@ def process_zinc():
         
         with Pool(25) as p:
             dist_masks = p.map(func_sp_ours, adjs)
-        dist_mask = np.stack(dist_masks, axis=1)
+        dist_mask = np.stack(dist_masks)
 
         np.savez(f'./data/ZINC/subset/{split}.npz',
                  x = np.stack(dataset_as_dict['x']).squeeze().astype(np.int32),

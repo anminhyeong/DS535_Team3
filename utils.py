@@ -61,11 +61,11 @@ def pq_walk_sequences(adj, p=1, q=1, walk_length=10, num_walks=5):
                     break  # 이동 불가
                 
                 # p-q 기반 확률 계산
-                
                 return_to_prev = (neighbors == prev_node)
                 connected_to_prev = (prev_node != -1) & (adj[prev_node, neighbors] > 0)
                 probabilities = np.where(return_to_prev,1/p,np.where(connected_to_prev,1,1/q))
                 
+                # probabilities = []
                 # for neighbor in neighbors:
                 #     if neighbor == prev_node:
                 #         probabilities.append(1 / p)  # 이전 노드로 되돌아가는 확률
