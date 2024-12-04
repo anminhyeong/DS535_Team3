@@ -39,7 +39,6 @@ def process(name):
         with Pool(25) as p:
             dist_masks = p.map(func_sp_ours, adjs)
         dist_mask = np.stack(dist_masks)
-        print(dist_mask.shape, len(dataset))
         
         if name in ['MNIST', 'CIFAR10']:
             np.savez(f'./data/{name}/{split}.npz',
