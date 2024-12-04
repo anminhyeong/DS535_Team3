@@ -89,7 +89,6 @@ def gen_dist_mask_pq_walk(adj, p=1, q=1, walk_length=10, num_walks=5):
     dist_mask = np.zeros((adj.shape[0], walk_length, adj.shape[0]), dtype=np.int32)
 
     for walk in walk_sequences:
-        print(walk)
         for step, node in enumerate(walk[:-1]):  # 마지막 노드는 다음 이동이 없으므로 제외
             if step == 0:
                 dist_mask[node, step, node] += 1

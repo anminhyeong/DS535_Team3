@@ -19,27 +19,27 @@ metadata = {
 
 func_sp = partial(floyd_warshall, directed=False, unweighted=True)
 func_sp_ours = partial(gen_dist_mask_pq_walk, p=1, q=1, walk_length=10, num_walks=5)
+keys = None
 
 def process(name):
     for split in splits:
         dataset = GNNBenchmarkDataset(root='./data', name=name, split=split,
                                       transform=ToDense(num_nodes=metadata[name]['max_num_nodes']))
-        keys = dataset[0].keys
+        keys = dataset[0].keys()
         dataset_as_dict = {key: [] for key in keys}
         for g in dataset:
             for key in keys:
                 dataset_as_dict[key].append(g[key].numpy())
-        
         adjs = dataset_as_dict.pop('adj')
         # with Pool(25) as p: #! adjust according to your machine
         #     dist = p.map(func_sp, adjs)
         # dist = np.stack(dist)
         # dist = np.where(np.isfinite(dist), dist, -1).astype(np.int32)
         # dist_mask = np.stack([(dist == k) for k in range(dist.max() + 1)], axis=1)
-        
         with Pool(25) as p:
             dist_masks = p.map(func_sp_ours, adjs)
-        dist_mask = np.stack(dist_masks)
+        dist_mask = np.stack(dist_masks, axis=1)
+        print(dist_mask.shape, len(dataset))
         
         if name in ['MNIST', 'CIFAR10']:
             np.savez(f'./data/{name}/{split}.npz',
@@ -62,7 +62,7 @@ def process_zinc():
     for split in splits:
         dataset = ZINC(root='./data/ZINC', subset=True, split=split,
                        transform=ToDense(num_nodes=metadata['ZINC']['max_num_nodes']))
-        keys = dataset[0].keys
+        keys = dataset[0].keys()
         dataset_as_dict = {key: [] for key in keys}
         for g in dataset:
             for key in keys:
@@ -77,7 +77,7 @@ def process_zinc():
         
         with Pool(25) as p:
             dist_masks = p.map(func_sp_ours, adjs)
-        dist_mask = np.stack(dist_masks)
+        dist_mask = np.stack(dist_masks, axis=1)
 
         np.savez(f'./data/ZINC/subset/{split}.npz',
                  x = np.stack(dataset_as_dict['x']).squeeze().astype(np.int32),
