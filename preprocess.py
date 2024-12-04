@@ -36,6 +36,7 @@ def process(name):
         # dist = np.stack(dist)
         # dist = np.where(np.isfinite(dist), dist, -1).astype(np.int32)
         # dist_mask = np.stack([(dist == k) for k in range(dist.max() + 1)], axis=1)
+        
         with Pool(25) as p:
             dist_masks = p.map(func_sp_ours, adjs)
         dist_mask = np.stack(dist_masks, axis=1)

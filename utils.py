@@ -1,5 +1,7 @@
 import numpy as np
+import tqdm
 from sklearn.metrics import average_precision_score
+
 
 def map_nested_fn(fn):
     """
@@ -48,27 +50,31 @@ def pq_walk_sequences(adj, p=1, q=1, walk_length=10, num_walks=5):
     num_nodes = adj.shape[0]
     walk_sequences = []
 
-    for start_node in range(num_nodes):
-        for _ in range(num_walks):
+    for start_node in tqdm(range(num_nodes)):
+        for _ in tqdm(range(num_walks)):
             current_node = start_node
             prev_node = -1
-            walk = [current_node]  # 시작 노드를 포함한 walk
+            walk = np.array([current_node])  # 시작 노드를 포함한 walk
             for _ in range(walk_length - 1):
                 neighbors = np.where(adj[current_node] > 0)[0]
                 if len(neighbors) == 0:
                     break  # 이동 불가
                 
                 # p-q 기반 확률 계산
-                probabilities = []
-                for neighbor in neighbors:
-                    if neighbor == prev_node:
-                        probabilities.append(1 / p)  # 이전 노드로 되돌아가는 확률
-                    elif prev_node != -1 and adj[prev_node, neighbor] > 0:
-                        probabilities.append(1)  # 이전 노드와 연결된 노드
-                    else:
-                        probabilities.append(1 / q)  # 다른 노드로 이동할 확률
                 
-                probabilities = np.array(probabilities)
+                return_to_prev = (neighbors == prev_node)
+                connected_to_prev = (prev_node != -1) & (adj[prev_node, neighbors] > 0)
+                probabilities = np.where(return_to_prev,1/p,np.where(connected_to_prev,1,1/q))
+                
+                # for neighbor in neighbors:
+                #     if neighbor == prev_node:
+                #         probabilities.append(1 / p)  # 이전 노드로 되돌아가는 확률
+                #     elif prev_node != -1 and adj[prev_node, neighbor] > 0:
+                #         probabilities.append(1)  # 이전 노드와 연결된 노드
+                #     else:
+                #         probabilities.append(1 / q)  # 다른 노드로 이동할 확률
+                
+                # probabilities = np.array(probabilities)
                 probabilities /= probabilities.sum()  # 확률 정규화
                 
                 # 다음 노드 선택
@@ -78,7 +84,7 @@ def pq_walk_sequences(adj, p=1, q=1, walk_length=10, num_walks=5):
                 current_node = next_node
             
             walk_sequences.append(walk)
-    
+ 
     return walk_sequences
 
 def gen_dist_mask_pq_walk(adj, p=1, q=1, walk_length=10, num_walks=5):
