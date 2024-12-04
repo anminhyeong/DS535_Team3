@@ -35,6 +35,12 @@ parser.add_argument("--epochs", default=600, type=int)
 parser.add_argument("--batch_size", default=16, type=int)
 parser.add_argument("--seed", default=1, type=int)
 parser.add_argument("--gpu", default="0", type=str)
+
+#* random walk version
+parser.add_argument('--length_walk', type=int, help="the length of the random walks", default=5)
+parser.add_argument('--num_walk', type=int, help="the length of the random walks", default=5)
+parser.add_argument('--p_value', type=float, help="the length of the random walks", default=1.0)
+parser.add_argument('--q_value', type=float, help="the length of the random walks", default=1.0)
 args = parser.parse_args()
 
 os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
@@ -44,7 +50,7 @@ if not os.path.exists("./log"):
     os.mkdir("./log")
 
 time_str = time.strftime("%m%d-%H%M%S")
-logging.basicConfig(filename=f"./log/{args.name}_{time_str}_{args.gpu}.log",
+logging.basicConfig(filename=f"./log/{args.name}_{time_str}_{str(args.length_walk)}_{str(args.num_walk)}_{str(int(args.p_value * 100))}_{str(int(args.q_value * 100))}.log",
                     format="%(message)s", level=logging.INFO)
 logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 logging.info(args)

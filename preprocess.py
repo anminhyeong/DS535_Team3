@@ -111,7 +111,12 @@ if __name__ == '__main__':
         print(f'Processing {name}...')
         process(name)
         if os.path.exists('./data/'+ name + '/processed'):
-            src_name = './data/'+ name + '/processed'
-            os.rename(src_name, src_name + str(walk_length) + '-' + str(num_walks) + '-' + str(int(p * 100)) + '-' + str(int(q * 100)))
+            for split in splits:
+                src_name = './data/'+ name + '/' + split +'_dist_mask.npy'
+                os.rename(src_name, src_name + str(walk_length) + '-' + str(num_walks) + '-' + str(int(p * 100)) + '-' + str(int(q * 100)))
     print(f'Processing ZINC...')    
     process_zinc()
+    if os.path.exists('./data/ZINC/subset'):
+        for split in splits:
+            src_name = './data/ZINC/' + split + '_dist_mask.npy'
+            os.rename(src_name, src_name + str(walk_length) + '-' + str(num_walks) + '-' + str(int(p * 100)) + '-' + str(int(q * 100)))
