@@ -1,7 +1,9 @@
+import math
 import torch
 import torch.nn as nn
 import torch.functional as F
 from LRU_pytorch import LRU
+from init_torch import init_eig_magnitude, init_eig_phase, init_gamma_log
 
 class MLP(nn.Module):
     def __init__(self, dim_h, expand=1, drop_rate=0.):
@@ -24,6 +26,38 @@ class MLP(nn.Module):
         x = self.dropout(x) if training else x
         return x + inputs
 
+class LRU(nn.Module):
+    def __init__(self, dim_v, dim_h, r_min=0., r_max=1., max_phase=6.28, drop_rate=0., act="full-glu"):
+        super(LRU, self).__init__()
+        self.dim_v = dim_v
+        self.dim_h = dim_h
+        self.r_min = r_min
+        self.r_max = r_max
+        self.max_phase = max_phase
+        self.drop_rate = drop_rate
+        self.act = act
+        
+        self.nu_log = nn.Parameter(init_eig_magnitude(r_min,r_max)((dim_v,)))
+        self.theta_log = nn.Parameter(init_eig_phase(max_phase)((dim_v,)))
+        diag_lamba = torch.exp(-torch.exp(self.nu_log) + 1j * torch.exp(self.theta_log))
+        self.gamma_log = nn.Parameter(init_gamma_log(diag_lamba))
+        
+        B_re=torch.randn([dim_h,dim_v])/math.sqrt(2*dim_v)
+        B_im=torch.randn([dim_h,dim_v])/math.sqrt(2*dim_v)
+        self.B=nn.Parameter(torch.complex(B_re,B_im))
+        C_re=torch.randn([dim_v,dim_h])/math.sqrt(dim_h)
+        C_im=torch.randn([dim_v,dim_h])/math.sqrt(dim_h)
+        self.C=nn.Parameter(torch.complex(C_re,C_im))
+        
+        self.dropout = nn.Dropout(drop_rate)
+        self.dense = nn.Linear(dim_h, dim_h)
+    
+    def forward(self, inputs, training = False):
+        xs = nn.LayerNorm()
+
+        
+    
+
 class GRED(nn.Module):
     def __init__(self, dim_v, dim_h, expand=1, r_min=0., r_max=1., max_phase=6.28, drop_rate=0., act="full-glu"):
         super(GRED, self).__init__()
@@ -37,7 +71,7 @@ class GRED(nn.Module):
         self.act = act
 
         self.mlp = MLP(dim_h, expand, drop_rate)
-        self.lru = LRU(dim_v, dim_h, r_min, r_max, max_phase)
+        self.lru = LRU() #변수설정필요
 
     def forward(self, inputs, dist_masks, training=False):
         # Swap axes and perform matrix multiplication
