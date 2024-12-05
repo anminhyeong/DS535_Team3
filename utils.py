@@ -92,13 +92,13 @@ def gen_dist_mask_pq_walk(adj, p=1, q=1, walk_length=5, num_walks=5):
     p-q walk 기반 거리 마스크 생성.
     """
     walk_sequences = pq_walk_sequences(adj, p=p, q=q, walk_length=walk_length, num_walks=num_walks)
-    dist_mask = np.zeros((adj.shape[0], walk_length, adj.shape[0]), dtype=np.int32)
+    dist_mask = np.zeros((walk_length, adj.shape[0], adj.shape[0]), dtype=np.int32)
 
     for walk in walk_sequences:
         for step, node in enumerate(walk[:-1]):  # 마지막 노드는 다음 이동이 없으므로 제외
             if step == 0:
-                dist_mask[node, step, node] += 1
+                dist_mask[step, node, node] += 1
             next_node = walk[step + 1]
-            dist_mask[walk[0], step + 1, next_node] +=1  # 해당 스텝에서 이동한 노드 쌍을 기록
+            dist_mask[step + 1, walk[0], next_node] +=1  # 해당 스텝에서 이동한 노드 쌍을 기록
 
     return dist_mask
