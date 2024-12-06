@@ -15,7 +15,7 @@ from utils import map_nested_fn
 parser = argparse.ArgumentParser()
 #* model hyper-params
 parser.add_argument("--num_layers", default=16, type=int)
-parser.add_argument("--num_hops", default=None, type=int)
+parser.add_argument("--num_hops", default=5, type=int)
 parser.add_argument("--dim_h", default=64, type=int)
 parser.add_argument("--dim_v", default=64, type=int)
 parser.add_argument("--r_min", default=0.9, type=float)
@@ -112,7 +112,7 @@ def main():
     key, params_key, dropout_key = random.split(root_key, 3)
     params = model.init(params_key,
                         train_set["x"][:args.batch_size],
-                        train_set["dist_mask"][:args.batch_size],
+                        train_set["dist_mask"][:args.batch_size, :args.num_hops],
                         training=False)
     logging.info(f"# parameters: {sum(p.size for p in tree_leaves(params))}")
     
@@ -190,7 +190,7 @@ def main():
                 "x": train_set["x"][batch_indices],
                 "y": train_set["y"][batch_indices],
                 "node_mask": train_set["node_mask"][batch_indices],
-                "dist_mask": train_set["dist_mask"][batch_indices]
+                "dist_mask": train_set["dist_mask"][batch_indices, :args.num_hops]
             }
             state = train_step(state, batch)
         
@@ -204,7 +204,7 @@ def main():
                 "x": val_set["x"][batch_indices],
                 "y": val_set["y"][batch_indices],
                 "node_mask": val_set["node_mask"][batch_indices],
-                "dist_mask": val_set["dist_mask"][batch_indices]
+                "dist_mask": val_set["dist_mask"][batch_indices, :args.num_hops]
             }
             state = eval_step(state, batch)
         
@@ -226,7 +226,7 @@ def main():
             "x": test_set["x"][batch_indices],
             "y": test_set["y"][batch_indices],
             "node_mask": test_set["node_mask"][batch_indices],
-            "dist_mask": test_set["dist_mask"][batch_indices]
+            "dist_mask": test_set["dist_mask"][batch_indices, :args.num_hops]
         }
         state = eval_step(state, batch)
     
