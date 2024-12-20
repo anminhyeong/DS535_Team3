@@ -85,7 +85,9 @@ class GRED(nn.Module):
     act: str = "full-glu"
 
     @nn.compact
-    def __call__(self, inputs, dist_masks, training: bool = False):
+    def __call__(self, inputs, dist_masks, training: bool = False, bool_mask: bool = False):
+        if bool_mask:
+            dist_masks = jnp.where(dist_masks > 0, 1, 0)
         xs = jnp.swapaxes(dist_masks, 0, 1) @ inputs
         xs = MLP(self.dim_h, self.expand, self.drop_rate)(xs)
         x = LRU(
@@ -115,7 +117,7 @@ class ZINC(nn.Module):
     act: str = "full-glu"
 
     @nn.compact
-    def __call__(self, inputs, node_masks, dist_masks, edge_attr = None, training: bool = False):
+    def __call__(self, inputs, node_masks, dist_masks, edge_attr = None, training: bool = False, bool_mask: bool = False):
         x = nn.Embed(28, self.dim_h, embedding_init=normal(stddev=0.01))(inputs)
         x = nn.Dense(self.dim_h)(nn.gelu(x))
         e = nn.Embed(4, self.dim_h, embedding_init=normal(stddev=0.01))(edge_attr)
@@ -134,46 +136,7 @@ class ZINC(nn.Module):
                 self.max_phase,
                 self.drop_rate,
                 self.act
-            )(x, dist_masks, training=training)
-        x = jnp.where(jnp.expand_dims(node_masks, -1), x, 0.)
-        x = jnp.sum(x, axis=1)
-        x = nn.gelu(nn.Dense(self.dim_h)(x))
-        x = nn.Dense(self.dim_o)(x)
-        return x
-
-class Peptides(nn.Module):
-
-    num_layers: int
-    dim_o: int
-
-    dim_v: int
-    dim_h: int
-    expand: int = 1
-
-    r_min: float = 0.
-    r_max: float = 1.
-    max_phase: float = 6.28
-    drop_rate: float = 0.
-    act: str = "full-glu"
-
-    @nn.compact
-    def __call__(self, inputs, node_masks, dist_masks, training: bool = False):
-        x = 0
-        for i in range(inputs.shape[-1]):
-            x = x + nn.Embed(full_atom_feature_dims[i], self.dim_h, embedding_init=normal(stddev=0.01))(inputs[..., i])
-        x = nn.Dense(self.dim_h)(nn.gelu(x))
-
-        for _ in range(self.num_layers):
-            x = GRED(
-                self.dim_v,
-                self.dim_h,
-                self.expand,
-                self.r_min,
-                self.r_max,
-                self.max_phase,
-                self.drop_rate,
-                self.act
-            )(x, dist_masks, training=training)
+            )(x, dist_masks, training=training, bool_mask=bool_mask)
         x = jnp.where(jnp.expand_dims(node_masks, -1), x, 0.)
         x = jnp.sum(x, axis=1)
         x = nn.gelu(nn.Dense(self.dim_h)(x))
@@ -196,7 +159,7 @@ class SuperPixel(nn.Module):
     act: str = "full-glu"
 
     @nn.compact
-    def __call__(self, inputs, node_masks, dist_masks, training: bool = False):
+    def __call__(self, inputs, node_masks, dist_masks, training: bool = False, bool_mask: bool = False):
         x = nn.Dense(self.dim_h)(inputs)
         x = nn.Dense(self.dim_h)(nn.gelu(x))
         for _ in range(self.num_layers):
@@ -209,7 +172,7 @@ class SuperPixel(nn.Module):
                 self.max_phase,
                 self.drop_rate,
                 self.act
-            )(x, dist_masks, training=training)
+            )(x, dist_masks, training=training, bool_mask=bool_mask)
         x = jnp.where(jnp.expand_dims(node_masks, -1), x, 0.)
         x = jnp.sum(x, axis=1) / jnp.sum(node_masks, axis=1, keepdims=True)
         x = nn.Dense(self.dim_o)(x)
@@ -231,7 +194,7 @@ class SBM(nn.Module):
     act: str = "full-glu"
 
     @nn.compact
-    def __call__(self, inputs, dist_masks, training: bool = False):
+    def __call__(self, inputs, dist_masks, training: bool = False, bool_mask: bool = False):
         x = nn.Embed(7, self.dim_h, embedding_init=normal(stddev=0.01))(inputs.argmax(axis=-1))
         for _ in range(self.num_layers):
             x = GRED(
@@ -243,6 +206,6 @@ class SBM(nn.Module):
                 self.max_phase,
                 self.drop_rate,
                 self.act
-            )(x, dist_masks, training=training)
+            )(x, dist_masks, training=training, bool_mask=bool_mask)
         x = nn.Dense(self.dim_o)(x)
         return x

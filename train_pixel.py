@@ -24,6 +24,7 @@ parser.add_argument("--max_phase", default=6.28, type=float)
 parser.add_argument("--drop_rate", default=0.15, type=float)
 parser.add_argument("--expand", default=1, type=int)
 parser.add_argument("--act", default="full-glu", type=str)
+parser.add_argument("--bool_mask", action="store_true")
 
 #* training hyper-params
 parser.add_argument("--lr_min", default=1e-7, type=float)
@@ -63,10 +64,10 @@ class TrainState(train_state.TrainState):
     total: int
 
 @jit
-def train_step(state, batch):
+def train_step(state, batch, bool_mask=args.bool_mask):
     step_key = random.fold_in(state.key, state.step)
     def loss_fn(params):
-        logits = state.apply_fn(params, batch["x"], batch["node_mask"], batch["dist_mask"], training=True, rngs={"dropout": step_key})
+        logits = state.apply_fn(params, batch["x"], batch["node_mask"], batch["dist_mask"], training=True, bool_mask=bool_mask, rngs={"dropout": step_key})
         correct = jnp.equal(logits.argmax(axis=-1), batch["y"]).sum()
         loss = optax.softmax_cross_entropy_with_integer_labels(
             logits=logits,
@@ -81,8 +82,8 @@ def train_step(state, batch):
     return state
 
 @jit
-def eval_step(state, batch):
-    logits = state.apply_fn(state.params, batch["x"], batch["node_mask"], batch["dist_mask"], training=False)
+def eval_step(state, batch, bool_mask=args.bool_mask):
+    logits = state.apply_fn(state.params, batch["x"], batch["node_mask"], batch["dist_mask"], training=False, bool_mask=bool_mask)
     eval_loss = optax.softmax_cross_entropy_with_integer_labels(
         logits=logits,
         labels=batch["y"]
