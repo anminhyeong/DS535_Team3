@@ -20,16 +20,20 @@ Please refer to the [JAX](https://jax.readthedocs.io/en/latest/installation.html
 To keep the data preprocessing consistent with other baselines, we load the datasets using `torch-geometric==2.3.1` and convert them into NumPy arrays.
 You need `torch-geometric` to run `preprocess.py` and `preprocess_peptides.py`, but you don't need it to run training scripts.
 
+> Instead of running in the local environment, you can run on Colab environment using the provided experiments.ipynb file.
+
+## Experiment Setting
+
 We conducted experiments differentiating the following settings:
 1. Random walk strategies (random walk, DFS-like walk, highly DFS-like walk)
-  - Configured as argument (p_value and q_value) in the preprocess.py command.
+  - Configured as argument (**p_value** and **q_value**) in the preprocess.py command.
   - Random walk: p_value = 1.0, q_value = 1.0
   - DFS-like walk: p_value = 1e10, q_value = 0.5
   - Highly DFS-like walk: p_value = 1e10, q_value = 0.1
 2. Mask data type (int, bool)
-  - Configured as argument (bool_mask) in the preprocess.py command.
+  - Configured as argument (**bool_mask**) in the preprocess.py command.
 3. Number of hops (num_hops = 3, 4, 5)
-  - Configured as argument (num_hops) in the train_{pixel, sbm, zinc}.py command.
+  - Configured as argument (**num_hops**) in the train_{pixel, sbm, zinc}.py command.
 
 ## Data Preprocessing
 
@@ -37,8 +41,11 @@ To prepare MNIST data with random walk strategy, please run:
 ```
 python preprocess.py --length 5 --num 5 --p_value 1.0 --q_value 1.0 --name MNIST
 ```
-You can change p_value, q_value to apply different random walk strategies.
-Same code applies to other four data except for name argument in the command.
+You can change p_value, q_value to apply different random walk strategies.  
+Same code applies to CIFAR10, ZINC, CLUSTER, PATTERN except for **name** argument in the command.  
+
+You can download the dataset from the following link.  
+https://drive.google.com/drive/folders/12kKq-WAer7TYh3R5H3wyxzZaWTqzyOyD?usp=drive_link
 
 
 ## Training
@@ -59,7 +66,7 @@ python train_sbm.py --name CLUSTER --num_layers 16 --dim_h 64 --dim_v 64 --weigh
 python train_sbm.py --name PATTERN --num_layers 10 --dim_h 72 --dim_v 64 --weight_decay 0.1 --r_min 0.5
 ```
 
-To apply a boolean mask when running the train_{pixel, sbm, zinc}.py command, you need to include the --bool_mask argument in your command.
+To apply a **boolean mask** when running the train_{pixel, sbm, zinc}.py command, you need to include the --bool_mask argument in your command.
 
 For MNIST and CIFAR10:
 ```
@@ -75,7 +82,3 @@ For CLUSTER and PATTERN:
 ```
 python train_sbm.py --name CLUSTER --num_layers 16 --dim_h 64 --dim_v 64 --weight_decay 0.2 --r_min 0.9 --bool_mask
 python train_sbm.py --name PATTERN --num_layers 10 --dim_h 72 --dim_v 64 --weight_decay 0.1 --r_min 0.5 --bool_mask
-
----
-
-(Should add lisense here)
