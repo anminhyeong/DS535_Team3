@@ -1,4 +1,4 @@
-# DS535_Team3
+# DS535 Team 3
 
 This repo is implemented based on the official code for ICML 2024 paper: **Recurrent Distance Filtering for Graph Representation Learning** (https://arxiv.org/abs/2312.01538)
 
